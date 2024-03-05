@@ -1,26 +1,47 @@
 package ru.netology.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class PostRepositoryStubImpl implements PostRepository {
-  public List<Post> all() {
-    return Collections.emptyList();
-  }
+    private Map<Long, Post> posts;
+    private long nextId;
 
-  public Optional<Post> getById(long id) {
-    return Optional.empty();
-  }
+    public PostRepositoryStubImpl() {
+        this.posts = new HashMap<>();
+        this.nextId = 0;
+    }
 
-  public Post save(Post post) {
-    return post;
-  }
+    public List<Post> all() {
+        return new ArrayList<>(posts.values());
+    }
 
-  public void removeById(long id) {
-  }
+    public Optional<Post> getById(long id) {
+        return Optional.ofNullable(posts.get(id));
+    }
+
+    public synchronized Post save(Post post) {
+        long id = post.getId();
+        if (id == 0) {
+            id = nextId++;
+            post.setId(id);
+            posts.put(id, post);
+        } else {
+            long currentId = post.getId();
+            posts.put(currentId, post);
+        }
+        return post;
+    }
+
+    public void removeById(long id) {
+        if (posts.containsKey(id)) {
+            posts.remove(id);
+        } else {
+            throw new NotFoundException("Error id");
+        }
+    }
 }
